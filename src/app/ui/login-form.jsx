@@ -1,3 +1,5 @@
+'use client';
+
 import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
@@ -6,10 +8,23 @@ import {
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
+import { useForm } from 'react-hook-form';
+import { authenticate } from '@/app/lib/actions';
+
 
 export default function LoginForm() {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  
+  const onSubmit = async (data) => {
+    try {
+      await authenticate(data);
+    } catch (error) {
+      // Handle authentication error
+    }
+  };
+
   return (
-    <form className="space-y-3">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
         <h1 className={`${lusitana.className} mb-3 text-2xl`}>
           Please log in to continue.
@@ -24,15 +39,15 @@ export default function LoginForm() {
             </label>
             <div className="relative">
               <input
+                {...register('email', { required: 'Email is required' })}
                 className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
                 id="email"
                 type="email"
-                name="email"
                 placeholder="Enter your email address"
-                required
               />
               <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
+            {errors.email && <p className="text-red-500">{errors.email.message}</p>}
           </div>
           <div className="mt-4">
             <label
@@ -43,31 +58,28 @@ export default function LoginForm() {
             </label>
             <div className="relative">
               <input
+                {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters long' } })}
                 className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
                 id="password"
                 type="password"
-                name="password"
                 placeholder="Enter password"
-                required
-                minLength={6}
               />
               <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
+            {errors.password && <p className="text-red-500">{errors.password.message}</p>}
           </div>
         </div>
-        <LoginButton />
-        <div className="flex h-8 items-end space-x-1">
-          {/* Add form errors here */}
-        </div>
+        <LoginButton isSubmitting={isSubmitting} />
       </div>
     </form>
   );
 }
 
-function LoginButton() {
+function LoginButton({ isSubmitting }) {
   return (
-    <Button className="mt-4 w-full">
+    <Button className="mt-4 w-full" aria-disabled={isSubmitting}>
       Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
     </Button>
   );
 }
+
